@@ -1,5 +1,5 @@
 {
-  "name": "com.amenonegames.audiomixercontrollergenerator",
+  "name": "com.amenone.mixercontrollergen",
   "displayName": "AudioMixerControllerGenerator",
   "version": "0.1.1",
   "unity": "2020.1",
