@@ -7,114 +7,15 @@ using System.Text;
 
 namespace Amenonegames.GenerageAudioMixerController.Editor
 {
-    public class AudioMixerControllerGenerator  
+    public class AudioMixerControllerGenerator
     {
-        #region Settings
-        
-        private bool requireOverrideFiles = true;
+        private AudioMixerControllerGenerationSetting settings;
 
-        private string GenerateClassImportNameSpace()
-        {
-            string classImportNameSpace = @$"
-using System.Threading;
-using Cysharp.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Audio;
-using DG.Tweening;
-";
-
-            if (requireInterfaceGeneration && !string.IsNullOrEmpty(interfaceNameSpace)) 
-                classImportNameSpace += @$"
-using {interfaceNameSpace};";
-
-            return classImportNameSpace;
-        }
-        private static string classNameSpace = "View.Sound";
-        private static string className = "AudioMixerController";
-        private static string classFilePath = $"Assets/Scripts/Sound/{className}.cs";
-        private static string additionalClasVatiableDeclaration = @"";
-
-                
-        // change exposed param method Name to use method generation and interface generation
-        private string GenerateChangeMethodName(string propertyName) => @$"void {propertyName}Change(float value)";
-        // change exposed param method sync ver
-        private string GenerateChangeMethod(string propertyName)
-        {
-            var changeMethodName = "public " + GenerateChangeMethodName(propertyName);
-            
-            return @$"
-            {changeMethodName}
-            {{
-                _audioMixer.SetFloat(""{propertyName}"", value);
-            }}
-";
-        }
-        
-        // return exposed param to default method Name to use method generation and interface generation
-        private string GenerateResetMethodName(string propertyName) => @$"void {propertyName}Reset(float value)";
-        // return exposed param to default method sync ver
-        private string GenerateResetMethod(string propertyName)
-        {
-            var resetMethodName = "public " + GenerateResetMethodName(propertyName);
-            return @$"
-            {resetMethodName}
-            {{
-                _audioMixer.SetFloat(""{propertyName}"", _original{propertyName});
-            }}
-";
-        }
-        
-        // change exposed param method Name to use method generation and interface generation
-        private string GenerateChangeAsyncMethodName(string propertyName) => @$"UniTask {propertyName}ChangeAsync(float value, CancellationToken token, float duration)";
-        // change exposed param method async ver
-        private string GenerateChangeMethodAsync(string propertyName)
-        {
-            var changeMethodName = "public async " +  GenerateChangeAsyncMethodName(propertyName);
-            return @$"
-            {changeMethodName}
-            {{
-                await _audioMixer.DOSetFloat(""{propertyName}"", value, duration).WithCancellation(token);
-            }}
-";
-        }
-        
-        // return exposed param to default method Name to use method generation and interface generation
-        private string GenerateResetAsyncMethodName(string propertyName) => @$"UniTask {propertyName}ResetAsync(CancellationToken token, float duration)";
-        // change exposed param method async ver
-        private string GenerateResetMethodAsync(string propertyName)
-        {
-            var resetMethodName = "public async " + GenerateResetAsyncMethodName(propertyName);
-            return @$"
-            {resetMethodName}
-            {{
-                await _audioMixer.DOSetFloat(""{propertyName}"", _original{propertyName}, duration).WithCancellation(token);
-            }}
-";
-        }
-        
-        private string interfaceImportNamSpace = @"
-using System.Threading;
-using Cysharp.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.Audio;
-";
-        private static string interfaceNameSpace = "ViewRoot.Interface";
-        private static string interfaceName = "IAudioMixerControllable";
-        private static string interfaceFilePath = $"Assets/Scripts/Sound/Interface/{interfaceName}.cs";
-        
-        #endregion
-        
-        
-        #region GenerateMethods
-        
-        private bool requireAsyncMethod = true;
-        private bool requireInterfaceGeneration = true;
         private string[] _properties;
         public AudioMixerControllerGenerator(string[] properties,bool requireAsyncMethod, bool requireInterfaceGeneration)
         {
             _properties = properties;
-            this.requireAsyncMethod = requireAsyncMethod;
-            this.requireInterfaceGeneration = requireInterfaceGeneration;
+            settings = new AudioMixerControllerGenerationSetting(requireAsyncMethod, requireInterfaceGeneration);
         }
 
         public void Generate()
@@ -131,13 +32,15 @@ using UnityEngine.Audio;
                 thisClassName = declaringType?.Name;
             }
 
+            var classFilePath = settings.GenerateClassFilePath();
+            
             // Create Directory if not exists
             string directoryPath = "";
             directoryPath = Path.GetDirectoryName(classFilePath);
             if (!Directory.Exists(directoryPath))
                 if (directoryPath != null)
                     Directory.CreateDirectory(directoryPath);
-            directoryPath = Path.GetDirectoryName(interfaceFilePath);
+            directoryPath = Path.GetDirectoryName(classFilePath);
             // Create Directory if not exists
             if (!Directory.Exists(directoryPath))
                 if (directoryPath != null)
@@ -147,21 +50,23 @@ using UnityEngine.Audio;
             // if override files is not required, generate unique path.
             // if file is already exists, add number to the end of the file name.
             string classFilePathInMethod = classFilePath;
-            if(!requireOverrideFiles)
+            if(!settings.requireOverrideFiles)
                 classFilePathInMethod = AssetDatabase.GenerateUniqueAssetPath(classFilePath);
+
+            var interfaceFilePath = settings.GenerateInterfaceFilePath();
             
             // if override files is not required, generate unique path.
             // if file is already exists, add number to the end of the file name.
             string interfaceFilePathInMethod = interfaceFilePath;
-            if(!requireOverrideFiles)
+            if(!settings.requireOverrideFiles)
                 interfaceFilePathInMethod = AssetDatabase.GenerateUniqueAssetPath(interfaceFilePath);
             
-            var classCode = GenerateClassString(className, interfaceName, thisClassName);
+            var classCode = GenerateClassString(settings.className, settings.interfaceName, thisClassName);
             File.WriteAllText(classFilePathInMethod, classCode);
 
-            if (requireInterfaceGeneration)
+            if (settings.requireInterfaceGeneration)
             {
-                var interfaceCode = GenerateInterfaceString(interfaceName, thisClassName);
+                var interfaceCode = GenerateInterfaceString(settings.interfaceName, thisClassName);
                 File.WriteAllText(interfaceFilePathInMethod, interfaceCode);
             }
             
@@ -172,16 +77,16 @@ using UnityEngine.Audio;
         private string GenerateClassString(string className, string interfaceName, string thisClassName)
         {
             StringBuilder code = new();
-            string classImportNameSpace = GenerateClassImportNameSpace();
+            string classImportNameSpace = settings.GenerateClassImportNameSpace();
 
             code.Append(
                 @$"
 {classImportNameSpace}");
 
-            if(!string.IsNullOrEmpty(classNameSpace))
+            if(!string.IsNullOrEmpty(settings.classNameSpace))
             {
                 code.Append(@$"
-namespace {classNameSpace}
+namespace {settings.classNameSpace}
 {{
 ");
             }
@@ -193,7 +98,7 @@ namespace {classNameSpace}
         /// </summary>
         public class {className}");
             
-            if(requireInterfaceGeneration)
+            if(settings.requireInterfaceGeneration)
                 code.Append($":{interfaceName}");
 
             code.Append(
@@ -216,7 +121,7 @@ namespace {classNameSpace}
             code.Append
             (
                 @$"
-            {additionalClasVatiableDeclaration}
+            {settings.additionalClasVatiableDeclaration}
 
             public {className}(AudioMixer audioMixer)
             {{
@@ -241,15 +146,15 @@ namespace {classNameSpace}
             foreach (var property in _properties)
             {
 
-                var changeMethodSync = GenerateChangeMethod(property);
-                var resetMethodSync = GenerateResetMethod(property);
+                var changeMethodSync = settings.GenerateChangeMethod(property);
+                var resetMethodSync = settings.GenerateResetMethod(property);
                 
                 code.Append(changeMethodSync);
                 code.Append(resetMethodSync);
                 
-                if (!requireAsyncMethod) continue;
-                var changeMethodAsync = GenerateChangeMethodAsync(property);
-                var resetMethodAsync = GenerateResetMethodAsync(property);
+                if (!settings.requireAsyncMethod) continue;
+                var changeMethodAsync = settings.GenerateChangeMethodAsync(property);
+                var resetMethodAsync = settings.GenerateResetMethodAsync(property);
                 
                 code.Append(changeMethodAsync);
                 code.Append(resetMethodAsync);
@@ -259,7 +164,7 @@ namespace {classNameSpace}
             code.Append(@"
         }");
             
-            if (!string.IsNullOrEmpty(classNameSpace))
+            if (!string.IsNullOrEmpty(settings.classNameSpace))
             {
                 code.Append(@"
 }");
@@ -276,13 +181,13 @@ namespace {classNameSpace}
 
             code.Append(
                 @$"
-{interfaceImportNamSpace}
+{settings.interfaceImportNamSpace}
 ");
     
-                if(!string.IsNullOrEmpty(interfaceNameSpace))
+                if(!string.IsNullOrEmpty(settings.interfaceNameSpace))
                 {
                     code.Append(@$"
-namespace {interfaceNameSpace}
+namespace {settings.interfaceNameSpace}
 {{
 ");
                 }
@@ -299,8 +204,8 @@ namespace {interfaceNameSpace}
 
             foreach (var property in _properties)
             {
-                var changeMethodName = GenerateChangeMethodName(property);
-                var resetMethodName = GenerateResetMethodName(property);
+                var changeMethodName = settings.GenerateChangeMethodName(property);
+                var resetMethodName = settings.GenerateResetMethodName(property);
 
                 code.Append(@"
                 ");
@@ -314,9 +219,9 @@ namespace {interfaceNameSpace}
                 code.Append(@";
 ");
                 
-                if (!requireAsyncMethod) continue;
-                var changeAsyncMethodName = GenerateChangeAsyncMethodName(property);
-                var resetAsyncMethodName = GenerateResetAsyncMethodName(property);
+                if (!settings.requireAsyncMethod) continue;
+                var changeAsyncMethodName = settings.GenerateChangeAsyncMethodName(property);
+                var resetAsyncMethodName = settings.GenerateResetAsyncMethodName(property);
                 
                 code.Append(changeAsyncMethodName);
                 code.Append(@";
@@ -330,7 +235,7 @@ namespace {interfaceNameSpace}
             code.Append(@"
         }");
 
-            if (!string.IsNullOrEmpty(interfaceNameSpace))
+            if (!string.IsNullOrEmpty(settings.interfaceNameSpace))
             {
                 code.Append(@"
 }");
@@ -339,7 +244,7 @@ namespace {interfaceNameSpace}
             return code.ToString();
         }
         
-#endregion
+
         
     }
 
