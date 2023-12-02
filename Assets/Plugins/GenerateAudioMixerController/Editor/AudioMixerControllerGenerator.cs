@@ -3,6 +3,7 @@ using UnityEditor;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 
 namespace Amenonegames.GenerageAudioMixerController.Editor
@@ -10,8 +11,14 @@ namespace Amenonegames.GenerageAudioMixerController.Editor
     public class AudioMixerControllerGenerator
     {
         private AudioMixerControllerGenerationSetting settings;
+        private string enumName = "ExposedProperty";
 
         private string[] _properties;
+        private string changeMethodSwitchable;
+        private string resetMethodSwitchable;
+        private string changeMethodAsyncSwitchable;
+        private string resetMethodAsyncSwitchable;
+
         public AudioMixerControllerGenerator(string[] properties,bool requireAsyncMethod, bool requireInterfaceGeneration)
         {
             _properties = properties;
@@ -98,15 +105,34 @@ namespace {settings.classNameSpace}
         /// </summary>
         public class {className}");
             
-            if(settings.requireInterfaceGeneration)
+            if(settings.isMonoBehaviourAndSerializeAudioMixer && settings.requireInterfaceGeneration)
+                code.Append($":MonoBehaviour , {interfaceName}");
+            else if(settings.isMonoBehaviourAndSerializeAudioMixer)
+                code.Append($":MonoBehaviour");
+            else if(settings.requireInterfaceGeneration)
                 code.Append($":{interfaceName}");
 
             code.Append(
                 @$"
-        {{
+        {{");
+
+            if (settings.isMonoBehaviourAndSerializeAudioMixer)
+            {
+                code.Append(
+                    @$"
+            [SerializeField]private AudioMixer _audioMixer;
+"
+                );
+                
+            }
+            else
+            {
+                code.Append(
+                    @$"
             private readonly AudioMixer _audioMixer;
 "
-            );
+                );
+            }
 
             foreach (var property in _properties)
             {
@@ -122,26 +148,161 @@ namespace {settings.classNameSpace}
             (
                 @$"
             {settings.additionalClasVariableDeclaration}
+");
 
+            // if isMonoBehaviourAndSerializeAudioMixer is true, generate Awake method.
+            // if isMonoBehaviourAndSerializeAudioMixer is false, generate Constructor.
+            if (!settings.isMonoBehaviourAndSerializeAudioMixer)
+            {
+                code.Append
+                (
+                    @$"
             public {className}(AudioMixer audioMixer)
             {{
                 _audioMixer = audioMixer;
 "
-            );
-
-            foreach (var property in _properties)
-            {
-                code.Append
-                (@$"
+                );
+                foreach (var property in _properties)
+                {
+                    code.Append
+                    (@$"
                 _audioMixer.GetFloat(""{property}"", out _original{property});
 "
-                );
+                    );
+                }
             }
-
+            else
+            {
+                code.Append
+                (
+                    @$"
+            private void Awake()
+            {{
+"
+                );
+                
+                foreach (var property in _properties)
+                {
+                    code.Append
+                    (@$"
+                _audioMixer.GetFloat(""{property}"", out _original{property});
+"
+                    );
+                }
+            }
+            
             code.Append(@"
 
             }"
             );
+            
+            changeMethodSwitchable = settings.GenerateChangeMethod("ExposedProperty");
+            // remove last bracket
+            string pattern = @"\)[^\)]*$";
+            changeMethodSwitchable = Regex.Replace(changeMethodSwitchable, pattern, "");
+            changeMethodSwitchable += enumName + " enum)";
+            code.Append(@$"
+            public void {changeMethodSwitchable}
+            {{
+                switch(enum)
+                {{"
+            );
+            
+            foreach (var property in _properties)
+            {
+                var changeMethodName = settings.GenerateChangeMethodName(property);
+                code.Append(@$"
+                    case {enumName}.{property}:
+                        {changeMethodName};
+                        break;"
+                );
+            }
+            
+            resetMethodSwitchable = settings.GenerateResetMethod("ExposedProperty");
+            // remove last bracket
+            pattern = @"\)[^\)]*$";
+            resetMethodSwitchable = Regex.Replace(resetMethodSwitchable, pattern, "");
+            resetMethodSwitchable += enumName + " enum)";
+            code.Append(@$"
+            public void {resetMethodSwitchable}
+            {{
+                switch(enum)
+                {{"
+            );
+            
+            foreach (var property in _properties)
+            {
+                var resetMethodName = settings.GenerateResetMethodName(property);
+                code.Append(@$"
+                    case {enumName}.{property}:
+                        {resetMethodName};
+                        break;"
+                );
+            }
+            
+            code.Append(@"
+                }
+            }");
+
+            if (settings.requireAsyncMethod)
+            {
+                changeMethodAsyncSwitchable = settings.GenerateChangeAsyncMethod("ExposedProperty");
+                // remove last bracket
+                pattern = @"\)[^\)]*$";
+                changeMethodAsyncSwitchable = Regex.Replace(changeMethodAsyncSwitchable, pattern, "");
+                changeMethodAsyncSwitchable += enumName + " enum)";
+                code.Append(@$"
+            public async {changeMethodAsyncSwitchable}
+            {{
+                switch(enum)
+                {{"
+                );
+            
+                foreach (var property in _properties)
+                {
+                    var changeMethodName = settings.GenerateChangeAsyncMethodName(property);
+                    code.Append(@$"
+                    case {enumName}.{property}:
+                        {changeMethodName};
+                        break;"
+                    );
+                }
+                code.Append(@"
+                }
+            }");
+                
+                
+            }
+            
+            if (settings.requireAsyncMethod)
+            {
+                resetMethodAsyncSwitchable = settings.GenerateResetAsyncMethod("ExposedProperty");
+                // remove last bracket
+                pattern = @"\)[^\)]*$";
+                resetMethodAsyncSwitchable = Regex.Replace(resetMethodAsyncSwitchable, pattern, "");
+                resetMethodAsyncSwitchable += enumName + " enum)";
+                code.Append(@$"
+            public async {resetMethodAsyncSwitchable}
+            {{
+                switch(enum)
+                {{"
+                );
+            
+                foreach (var property in _properties)
+                {
+                    var resetMethodName = settings.GenerateResetAsyncMethodName(property);
+                    code.Append(@$"
+                    case {enumName}.{property}:
+                        {resetMethodName};
+                        break;"
+                    );
+                }
+                code.Append(@"
+                }
+            }");
+                
+                
+            }
 
             foreach (var property in _properties)
             {
@@ -153,8 +314,8 @@ namespace {settings.classNameSpace}
                 code.Append(resetMethodSync);
                 
                 if (!settings.requireAsyncMethod) continue;
-                var changeMethodAsync = settings.GenerateChangeMethodAsync(property);
-                var resetMethodAsync = settings.GenerateResetMethodAsync(property);
+                var changeMethodAsync = settings.GenerateChangeAsyncMethod(property);
+                var resetMethodAsync = settings.GenerateResetAsyncMethod(property);
                 
                 code.Append(changeMethodAsync);
                 code.Append(resetMethodAsync);
@@ -164,11 +325,28 @@ namespace {settings.classNameSpace}
             code.Append(@"
         }");
             
+            
+            code.Append(@$"
+        public enum {enumName}
+        {{
+");
+            foreach (var property in _properties)
+            {
+                code.Append(@$"
+            {property},");
+            }
+            
+            code.Append(@"
+        }");
+
+
             if (!string.IsNullOrEmpty(settings.classNameSpace))
             {
                 code.Append(@"
 }");
             }
+
+
 
             return code.ToString();
         }
@@ -201,6 +379,25 @@ namespace {settings.interfaceNameSpace}
         {{
 "
             );
+            
+            code.Append(changeMethodSwitchable);
+            code.Append(@";
+");
+            code.Append(resetMethodSwitchable);
+            code.Append(@";
+");
+
+            if (settings.requireAsyncMethod)
+            {
+                code.Append(changeMethodAsyncSwitchable);
+                code.Append(@";
+");
+                
+                code.Append(resetMethodAsyncSwitchable);
+                code.Append(@";
+");
+            }
+
 
             foreach (var property in _properties)
             {

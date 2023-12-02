@@ -1,10 +1,14 @@
 ﻿namespace Amenonegames.GenerageAudioMixerController.Editor
 {
-    public class AudioMixerControllerGenerationSetting
+    public class AudioMixerControllerGenerationSetting 
     {
                 
         public bool requireOverrideFiles = true;
-
+        
+        // if true, generate MonoBehaviour and Serialize AudioMixer
+        // if false, Constructor parameter is AudioMixer
+        public bool isMonoBehaviourAndSerializeAudioMixer = true;
+        
         public string GenerateClassImportNameSpace()
         {
             string classImportNameSpace = @$"
@@ -64,7 +68,7 @@ using {interfaceNameSpace};";
         // change exposed param method Name to use method generation and interface generation
         public string GenerateChangeAsyncMethodName(string propertyName) => @$"UniTask {propertyName}ChangeAsync(float value, CancellationToken token, float duration)";
         // change exposed param method async ver
-        public string GenerateChangeMethodAsync(string propertyName)
+        public string GenerateChangeAsyncMethod(string propertyName)
         {
             var changeMethodName = "public async " +  GenerateChangeAsyncMethodName(propertyName);
             return @$"
@@ -78,7 +82,7 @@ using {interfaceNameSpace};";
         // return exposed param to default method Name to use method generation and interface generation
         public string GenerateResetAsyncMethodName(string propertyName) => @$"UniTask {propertyName}ResetAsync(CancellationToken token, float duration)";
         // change exposed param method async ver
-        public string GenerateResetMethodAsync(string propertyName)
+        public string GenerateResetAsyncMethod(string propertyName)
         {
             var resetMethodName = "public async " + GenerateResetAsyncMethodName(propertyName);
             return @$"
