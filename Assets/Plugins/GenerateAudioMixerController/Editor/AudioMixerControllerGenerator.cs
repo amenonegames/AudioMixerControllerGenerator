@@ -121,7 +121,7 @@ namespace {settings.classNameSpace}
             code.Append
             (
                 @$"
-            {settings.additionalClasVatiableDeclaration}
+            {settings.additionalClasVariableDeclaration}
 
             public {className}(AudioMixer audioMixer)
             {{
@@ -181,7 +181,7 @@ namespace {settings.classNameSpace}
 
             code.Append(
                 @$"
-{settings.interfaceImportNamSpace}
+{settings.GenerateInterfaceImportNameSpace()}
 ");
     
                 if(!string.IsNullOrEmpty(settings.interfaceNameSpace))

@@ -9,9 +9,13 @@
         {
             string classImportNameSpace = @$"
 using System.Threading;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Audio;
+";
+
+            if (requireAsyncMethod) 
+                classImportNameSpace += @$"
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 ";
 
@@ -21,10 +25,11 @@ using {interfaceNameSpace};";
 
             return classImportNameSpace;
         }
+        
         public string classNameSpace = "View.Sound";
         public string className = "AudioMixerController";
         public string GenerateClassFilePath() => $"Assets/Scripts/Sound/{className}.cs";
-        public string additionalClasVatiableDeclaration = @"";
+        public string additionalClasVariableDeclaration = @"";
 
                 
         // change exposed param method Name to use method generation and interface generation
@@ -83,13 +88,24 @@ using {interfaceNameSpace};";
             }}
 ";
         }
-        
-        public string interfaceImportNamSpace = @"
+
+        public string GenerateInterfaceImportNameSpace()
+        {
+             string interfaceImportNamSpace = @"
 using System.Threading;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Audio;
 ";
+
+             if (requireAsyncMethod)
+                 interfaceImportNamSpace += @$"
+using Cysharp.Threading.Tasks;
+";
+
+             return interfaceImportNamSpace;
+        }
+        
+
         public string interfaceNameSpace = "ViewRoot.Interface";
         public string interfaceName = "IAudioMixerControllable";
         public string GenerateInterfaceFilePath() => $"Assets/Scripts/Sound/Interface/{interfaceName}.cs";
