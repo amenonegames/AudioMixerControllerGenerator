@@ -269,7 +269,7 @@ namespace {settings.classNameSpace}
                     var changeMethodCall = settings.GenerateChangeAsyncMethodCall(property);
                     code.Append(@$"
                     case {enumName}.{property}:
-                        {changeMethodCall};
+                        await {changeMethodCall};
                         break;"
                     );
                 }
@@ -299,7 +299,7 @@ namespace {settings.classNameSpace}
                     var resetMethodCall = settings.GenerateResetAsyncMethodCall(property);
                     code.Append(@$"
                     case {enumName}.{property}:
-                        {resetMethodCall};
+                        await {resetMethodCall};
                         break;"
                     );
                 }
