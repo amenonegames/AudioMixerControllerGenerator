@@ -30,7 +30,7 @@ using {interfaceNameSpace};";
             return classImportNameSpace;
         }
         
-        public string classNameSpace = "Sample";
+        public string classNameSpace = "Sound";
         public string className = "AudioMixerController";
         public string GenerateClassFilePath() => $"Assets/Scripts/Sound/{className}.cs";
         public string additionalClasVariableDeclaration = @"";
@@ -115,7 +115,7 @@ using Cysharp.Threading.Tasks;
         }
         
 
-        public string interfaceNameSpace = "ViewRoot.Interface";
+        public string interfaceNameSpace = "Sound.Interface";
         public string interfaceName = "IAudioMixerControllable";
         public string GenerateInterfaceFilePath() => $"Assets/Scripts/Sound/Interface/{interfaceName}.cs";
 
