@@ -100,14 +100,17 @@ using {interfaceNameSpace};";
         public string GenerateInterfaceImportNameSpace()
         {
              string interfaceImportNamSpace = @$"
-using System.Threading;
 using UnityEngine;
 using UnityEngine.Audio;
-using {classNameSpace};
 ";
+
+             if (!string.IsNullOrEmpty(classNameSpace))
+                 interfaceImportNamSpace += @$"
+using {classNameSpace};";
 
              if (requireAsyncMethod)
                  interfaceImportNamSpace += @$"
+using System.Threading;
 using Cysharp.Threading.Tasks;
 ";
 
@@ -120,6 +123,8 @@ using Cysharp.Threading.Tasks;
         public string GenerateInterfaceFilePath() => $"Assets/Scripts/Sound/Interface/{interfaceName}.cs";
 
         
+        // following settings can't be changed by code.
+        // this will be overwritten by editor window.
         public bool requireAsyncMethod = true;
         public bool requireInterfaceGeneration = true;
         public AudioMixerControllerGenerationSetting(bool requireAsyncMethod, bool requireInterfaceGeneration)
