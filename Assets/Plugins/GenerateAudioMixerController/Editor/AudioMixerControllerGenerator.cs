@@ -386,22 +386,26 @@ namespace {settings.interfaceNameSpace}
 "
             );
             
+            code.Append(@"
+                ");
             code.Append(changeMethodSwitchable);
             code.Append(@";
-");
+                ");
             code.Append(resetMethodSwitchable);
             code.Append(@";
-");
+                ");
 
             if (settings.requireAsyncMethod)
             {
+                code.Append(@"
+                ");
                 code.Append(changeMethodAsyncSwitchable);
                 code.Append(@";
-");
+                ");
                 
                 code.Append(resetMethodAsyncSwitchable);
                 code.Append(@";
-");
+                ");
             }
 
 
@@ -413,10 +417,9 @@ namespace {settings.interfaceNameSpace}
                 code.Append(@"
                 ");
                 code.Append(changeMethodName);
-                code.Append(@";
-");
+
                 
-                code.Append(@"
+                code.Append(@";
                 ");
                 code.Append(resetMethodName);
                 code.Append(@";
@@ -426,9 +429,11 @@ namespace {settings.interfaceNameSpace}
                 var changeAsyncMethodName = settings.GenerateChangeAsyncMethodName(property);
                 var resetAsyncMethodName = settings.GenerateResetAsyncMethodName(property);
                 
+                code.Append(@"
+                ");
                 code.Append(changeAsyncMethodName);
                 code.Append(@";
-");
+                ");
                 code.Append(resetAsyncMethodName);
                 code.Append(@";
 ");
