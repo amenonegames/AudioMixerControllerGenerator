@@ -47,34 +47,36 @@ namespace Amenonegames.GenerageAudioMixerController.Editor
             if (!Directory.Exists(directoryPath))
                 if (directoryPath != null)
                     Directory.CreateDirectory(directoryPath);
-            directoryPath = Path.GetDirectoryName(classFilePath);
-            // Create Directory if not exists
-            if (!Directory.Exists(directoryPath))
-                if (directoryPath != null)
-                    Directory.CreateDirectory(directoryPath);
-            
             
             // if override files is not required, generate unique path.
             // if file is already exists, add number to the end of the file name.
             string classFilePathInMethod = classFilePath;
             if(!settings.requireOverrideFiles)
                 classFilePathInMethod = AssetDatabase.GenerateUniqueAssetPath(classFilePath);
-
-            var interfaceFilePath = settings.GenerateInterfaceFilePath();
             
-            // if override files is not required, generate unique path.
-            // if file is already exists, add number to the end of the file name.
-            string interfaceFilePathInMethod = interfaceFilePath;
-            if(!settings.requireOverrideFiles)
-                interfaceFilePathInMethod = AssetDatabase.GenerateUniqueAssetPath(interfaceFilePath);
-            
-            var classCode = GenerateClassString(settings.className, settings.interfaceName, thisClassName);
-            File.WriteAllText(classFilePathInMethod, classCode);
-
             if (settings.requireInterfaceGeneration)
             {
+                var interfaceFilePath = settings.GenerateInterfaceFilePath();
+                directoryPath = Path.GetDirectoryName(interfaceFilePath);
+                // Create Directory if not exists
+                if (!Directory.Exists(directoryPath))
+                    if (directoryPath != null)
+                        Directory.CreateDirectory(directoryPath);
+                
+                // if override files is not required, generate unique path.
+                // if file is already exists, add number to the end of the file name.
+                string interfaceFilePathInMethod = interfaceFilePath;
+                if(!settings.requireOverrideFiles)
+                    interfaceFilePathInMethod = AssetDatabase.GenerateUniqueAssetPath(interfaceFilePath);
+                
+                var classCode = GenerateClassString(settings.className, settings.interfaceName, thisClassName);
+                File.WriteAllText(classFilePathInMethod, classCode);
+                AssetDatabase.ImportAsset(classFilePathInMethod);
+
                 var interfaceCode = GenerateInterfaceString(settings.interfaceName, thisClassName);
                 File.WriteAllText(interfaceFilePathInMethod, interfaceCode);
+                AssetDatabase.ImportAsset(interfaceFilePathInMethod);
+
             }
             
             // refresh UnityEditor
@@ -139,7 +141,7 @@ namespace {settings.classNameSpace}
                 code.Append
                 (
                     @$"
-            private readonly float _original{property};
+            private float _original{property};
 "
                 );
             }
@@ -196,46 +198,50 @@ namespace {settings.classNameSpace}
             }"
             );
             
-            changeMethodSwitchable = settings.GenerateChangeMethod("ExposedProperty");
+            changeMethodSwitchable = settings.GenerateChangeMethodName("ExposedProperty");
             // remove last bracket
             string pattern = @"\)[^\)]*$";
             changeMethodSwitchable = Regex.Replace(changeMethodSwitchable, pattern, "");
-            changeMethodSwitchable += enumName + " enum)";
+            changeMethodSwitchable += " ,"+ enumName + " prop)";
             code.Append(@$"
-            public void {changeMethodSwitchable}
+            public {changeMethodSwitchable}
             {{
-                switch(enum)
+                switch(prop)
                 {{"
             );
             
             foreach (var property in _properties)
             {
-                var changeMethodName = settings.GenerateChangeMethodName(property);
+                var changeMethodCall = settings.GenerateChangeMethodCall(property);
                 code.Append(@$"
                     case {enumName}.{property}:
-                        {changeMethodName};
+                        {changeMethodCall};
                         break;"
                 );
             }
             
-            resetMethodSwitchable = settings.GenerateResetMethod("ExposedProperty");
+            code.Append(@"
+                }
+            }");
+            
+            resetMethodSwitchable = settings.GenerateResetMethodName("ExposedProperty");
             // remove last bracket
             pattern = @"\)[^\)]*$";
             resetMethodSwitchable = Regex.Replace(resetMethodSwitchable, pattern, "");
-            resetMethodSwitchable += enumName + " enum)";
+            resetMethodSwitchable += " ,"+  enumName + " prop)";
             code.Append(@$"
-            public void {resetMethodSwitchable}
+            public {resetMethodSwitchable}
             {{
-                switch(enum)
+                switch(prop)
                 {{"
             );
             
             foreach (var property in _properties)
             {
-                var resetMethodName = settings.GenerateResetMethodName(property);
+                var resetMethodCall = settings.GenerateResetMethodCall(property);
                 code.Append(@$"
                     case {enumName}.{property}:
-                        {resetMethodName};
+                        {resetMethodCall};
                         break;"
                 );
             }
@@ -246,24 +252,24 @@ namespace {settings.classNameSpace}
 
             if (settings.requireAsyncMethod)
             {
-                changeMethodAsyncSwitchable = settings.GenerateChangeAsyncMethod("ExposedProperty");
+                changeMethodAsyncSwitchable = settings.GenerateChangeAsyncMethodName("ExposedProperty");
                 // remove last bracket
                 pattern = @"\)[^\)]*$";
                 changeMethodAsyncSwitchable = Regex.Replace(changeMethodAsyncSwitchable, pattern, "");
-                changeMethodAsyncSwitchable += enumName + " enum)";
+                changeMethodAsyncSwitchable += " ,"+  enumName + " prop)";
                 code.Append(@$"
             public async {changeMethodAsyncSwitchable}
             {{
-                switch(enum)
+                switch(prop)
                 {{"
                 );
             
                 foreach (var property in _properties)
                 {
-                    var changeMethodName = settings.GenerateChangeAsyncMethodName(property);
+                    var changeMethodCall = settings.GenerateChangeAsyncMethodCall(property);
                     code.Append(@$"
                     case {enumName}.{property}:
-                        {changeMethodName};
+                        {changeMethodCall};
                         break;"
                     );
                 }
@@ -276,24 +282,24 @@ namespace {settings.classNameSpace}
             
             if (settings.requireAsyncMethod)
             {
-                resetMethodAsyncSwitchable = settings.GenerateResetAsyncMethod("ExposedProperty");
+                resetMethodAsyncSwitchable = settings.GenerateResetAsyncMethodName("ExposedProperty");
                 // remove last bracket
                 pattern = @"\)[^\)]*$";
                 resetMethodAsyncSwitchable = Regex.Replace(resetMethodAsyncSwitchable, pattern, "");
-                resetMethodAsyncSwitchable += enumName + " enum)";
+                resetMethodAsyncSwitchable += " ,"+ enumName + " prop)";
                 code.Append(@$"
             public async {resetMethodAsyncSwitchable}
             {{
-                switch(enum)
+                switch(prop)
                 {{"
                 );
             
                 foreach (var property in _properties)
                 {
-                    var resetMethodName = settings.GenerateResetAsyncMethodName(property);
+                    var resetMethodCall = settings.GenerateResetAsyncMethodCall(property);
                     code.Append(@$"
                     case {enumName}.{property}:
-                        {resetMethodName};
+                        {resetMethodCall};
                         break;"
                     );
                 }
@@ -440,6 +446,7 @@ namespace {settings.interfaceNameSpace}
 
             return code.ToString();
         }
+        
         
 
         

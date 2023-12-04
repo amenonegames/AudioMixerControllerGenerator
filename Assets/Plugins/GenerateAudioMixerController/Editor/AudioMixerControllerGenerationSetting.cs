@@ -12,13 +12,13 @@
         public string GenerateClassImportNameSpace()
         {
             string classImportNameSpace = @$"
-using System.Threading;
 using UnityEngine;
 using UnityEngine.Audio;
 ";
 
             if (requireAsyncMethod) 
                 classImportNameSpace += @$"
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 ";
@@ -30,7 +30,7 @@ using {interfaceNameSpace};";
             return classImportNameSpace;
         }
         
-        public string classNameSpace = "View.Sound";
+        public string classNameSpace = "Sample";
         public string className = "AudioMixerController";
         public string GenerateClassFilePath() => $"Assets/Scripts/Sound/{className}.cs";
         public string additionalClasVariableDeclaration = @"";
@@ -38,6 +38,7 @@ using {interfaceNameSpace};";
                 
         // change exposed param method Name to use method generation and interface generation
         public string GenerateChangeMethodName(string propertyName) => @$"void {propertyName}Change(float value)";
+        public string GenerateChangeMethodCall(string propertyName) => @$"{propertyName}Change(value);";
         // change exposed param method sync ver
         public string GenerateChangeMethod(string propertyName)
         {
@@ -53,6 +54,7 @@ using {interfaceNameSpace};";
         
         // return exposed param to default method Name to use method generation and interface generation
         public string GenerateResetMethodName(string propertyName) => @$"void {propertyName}Reset(float value)";
+        public string GenerateResetMethodCall(string propertyName) => @$"{propertyName}Reset(value);";
         // return exposed param to default method sync ver
         public string GenerateResetMethod(string propertyName)
         {
@@ -67,6 +69,7 @@ using {interfaceNameSpace};";
         
         // change exposed param method Name to use method generation and interface generation
         public string GenerateChangeAsyncMethodName(string propertyName) => @$"UniTask {propertyName}ChangeAsync(float value, CancellationToken token, float duration)";
+        public string GenerateChangeAsyncMethodCall(string propertyName) => @$"{propertyName}ChangeAsync(value, token, duration);";
         // change exposed param method async ver
         public string GenerateChangeAsyncMethod(string propertyName)
         {
@@ -81,6 +84,7 @@ using {interfaceNameSpace};";
         
         // return exposed param to default method Name to use method generation and interface generation
         public string GenerateResetAsyncMethodName(string propertyName) => @$"UniTask {propertyName}ResetAsync(CancellationToken token, float duration)";
+        public string GenerateResetAsyncMethodCall(string propertyName) => @$"{propertyName}ResetAsync(token, duration);";
         // change exposed param method async ver
         public string GenerateResetAsyncMethod(string propertyName)
         {
@@ -95,10 +99,11 @@ using {interfaceNameSpace};";
 
         public string GenerateInterfaceImportNameSpace()
         {
-             string interfaceImportNamSpace = @"
+             string interfaceImportNamSpace = @$"
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Audio;
+using {classNameSpace};
 ";
 
              if (requireAsyncMethod)
