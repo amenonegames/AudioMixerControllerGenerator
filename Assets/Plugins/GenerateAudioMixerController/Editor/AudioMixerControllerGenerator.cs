@@ -54,6 +54,10 @@ namespace Amenonegames.GenerageAudioMixerController.Editor
             if(!settings.requireOverrideFiles)
                 classFilePathInMethod = AssetDatabase.GenerateUniqueAssetPath(classFilePath);
             
+            var classCode = GenerateClassString(settings.className, settings.interfaceName, thisClassName);
+            File.WriteAllText(classFilePathInMethod, classCode);
+            AssetDatabase.ImportAsset(classFilePathInMethod);
+            
             if (settings.requireInterfaceGeneration)
             {
                 var interfaceFilePath = settings.GenerateInterfaceFilePath();
@@ -69,14 +73,9 @@ namespace Amenonegames.GenerageAudioMixerController.Editor
                 if(!settings.requireOverrideFiles)
                     interfaceFilePathInMethod = AssetDatabase.GenerateUniqueAssetPath(interfaceFilePath);
                 
-                var classCode = GenerateClassString(settings.className, settings.interfaceName, thisClassName);
-                File.WriteAllText(classFilePathInMethod, classCode);
-                AssetDatabase.ImportAsset(classFilePathInMethod);
-
                 var interfaceCode = GenerateInterfaceString(settings.interfaceName, thisClassName);
                 File.WriteAllText(interfaceFilePathInMethod, interfaceCode);
                 AssetDatabase.ImportAsset(interfaceFilePathInMethod);
-
             }
             
             // refresh UnityEditor
