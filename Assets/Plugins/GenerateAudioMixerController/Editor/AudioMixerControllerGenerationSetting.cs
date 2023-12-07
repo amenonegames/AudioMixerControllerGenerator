@@ -104,10 +104,6 @@ using UnityEngine;
 using UnityEngine.Audio;
 ";
 
-             if (!string.IsNullOrEmpty(classNameSpace))
-                 interfaceImportNamSpace += @$"
-using {classNameSpace};";
-
              if (requireAsyncMethod)
                  interfaceImportNamSpace += @$"
 using System.Threading;
