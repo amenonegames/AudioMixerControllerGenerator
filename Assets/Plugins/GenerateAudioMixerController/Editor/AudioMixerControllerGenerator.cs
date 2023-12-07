@@ -329,20 +329,23 @@ namespace {settings.classNameSpace}
 
             code.Append(@"
         }");
-            
-            
-            code.Append(@$"
+
+
+            if (!settings.requireInterfaceGeneration)
+            {
+                code.Append(@$"
         public enum {enumName}
         {{
 ");
-            foreach (var property in _properties)
-            {
-                code.Append(@$"
+                foreach (var property in _properties)
+                {
+                    code.Append(@$"
             {property},");
-            }
+                }
             
-            code.Append(@"
+                code.Append(@"
         }");
+            }
 
 
             if (!string.IsNullOrEmpty(settings.classNameSpace))
@@ -441,6 +444,22 @@ namespace {settings.interfaceNameSpace}
 
             code.Append(@"
         }");
+            
+            if (!settings.requireInterfaceGeneration)
+            {
+                code.Append(@$"
+        public enum {enumName}
+        {{
+");
+                foreach (var property in _properties)
+                {
+                    code.Append(@$"
+            {property},");
+                }
+            
+                code.Append(@"
+        }");
+            }
 
             if (!string.IsNullOrEmpty(settings.interfaceNameSpace))
             {
