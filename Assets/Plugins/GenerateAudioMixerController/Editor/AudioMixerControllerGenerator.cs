@@ -255,7 +255,7 @@ namespace {settings.classNameSpace}
             getMethodSwitchable = Regex.Replace(getMethodSwitchable, pattern, "");
             getMethodSwitchable += " ,"+  enumName + " prop)";
             code.Append(@$"
-            public {changeMethodSwitchable}
+            public {getMethodSwitchable}
             {{
                 switch(prop)
                 {{"
@@ -266,7 +266,7 @@ namespace {settings.classNameSpace}
                 var getMethodCall = settings.GenerateGetMethodCall(property);
                 code.Append(@$"
                     case {enumName}.{property}:
-                        {getMethodCall};
+                        return {getMethodCall};
                         break;"
                 );
             }
@@ -340,9 +340,11 @@ namespace {settings.classNameSpace}
 
                 var changeMethodSync = settings.GenerateChangeMethod(property);
                 var resetMethodSync = settings.GenerateResetMethod(property);
+                var getMethodSync = settings.GenerateGetMethod(property);
                 
                 code.Append(changeMethodSync);
                 code.Append(resetMethodSync);
+                code.Append(getMethodSync);
                 
                 if (!settings.requireAsyncMethod) continue;
                 var changeMethodAsync = settings.GenerateChangeAsyncMethod(property);
@@ -350,6 +352,7 @@ namespace {settings.classNameSpace}
                 
                 code.Append(changeMethodAsync);
                 code.Append(resetMethodAsync);
+                
 
             }
 
@@ -456,7 +459,7 @@ namespace {settings.interfaceNameSpace}
                 ");
                 code.Append(resetMethodName);
                 code.Append(@";
-");
+                ");
                 
                 code.Append(getMethodName);
                 code.Append(@";
@@ -480,7 +483,7 @@ namespace {settings.interfaceNameSpace}
             code.Append(@"
         }");
             
-            if (!settings.requireInterfaceGeneration)
+            if (settings.requireInterfaceGeneration)
             {
                 code.Append(@$"
         public enum {enumName}

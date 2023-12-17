@@ -77,8 +77,7 @@ using {interfaceNameSpace};";
             return @$"
             {resetMethodName}
             {{
-                var result = _audioMixer.GetFloat({propertyName}, out value);
-                return 
+                return _audioMixer.GetFloat(""{propertyName}"", out value);
             }}
 ";
         }
