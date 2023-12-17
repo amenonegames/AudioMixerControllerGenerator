@@ -16,6 +16,7 @@ namespace Amenonegames.GenerageAudioMixerController.Editor
         private string[] _properties;
         private string changeMethodSwitchable;
         private string resetMethodSwitchable;
+        private string getMethodSwitchable;
         private string changeMethodAsyncSwitchable;
         private string resetMethodAsyncSwitchable;
 
@@ -249,6 +250,31 @@ namespace {settings.classNameSpace}
                 }
             }");
 
+            getMethodSwitchable = settings.GenerateGetMethodName("ExposedProperty");
+            pattern = @"\)[^\)]*$";
+            getMethodSwitchable = Regex.Replace(getMethodSwitchable, pattern, "");
+            getMethodSwitchable += " ,"+  enumName + " prop)";
+            code.Append(@$"
+            public {changeMethodSwitchable}
+            {{
+                switch(prop)
+                {{"
+            );
+            
+            foreach (var property in _properties)
+            {
+                var getMethodCall = settings.GenerateGetMethodCall(property);
+                code.Append(@$"
+                    case {enumName}.{property}:
+                        {getMethodCall};
+                        break;"
+                );
+            }
+            
+            code.Append(@"
+                }
+            }");
+            
             if (settings.requireAsyncMethod)
             {
                 changeMethodAsyncSwitchable = settings.GenerateChangeAsyncMethodName("ExposedProperty");
@@ -396,6 +422,10 @@ namespace {settings.interfaceNameSpace}
             code.Append(resetMethodSwitchable);
             code.Append(@";
                 ");
+            
+            code.Append(getMethodSwitchable);
+            code.Append(@";
+                ");
 
             if (settings.requireAsyncMethod)
             {
@@ -415,7 +445,8 @@ namespace {settings.interfaceNameSpace}
             {
                 var changeMethodName = settings.GenerateChangeMethodName(property);
                 var resetMethodName = settings.GenerateResetMethodName(property);
-
+                var getMethodName = settings.GenerateGetMethodName(property);
+                
                 code.Append(@"
                 ");
                 code.Append(changeMethodName);
@@ -424,6 +455,10 @@ namespace {settings.interfaceNameSpace}
                 code.Append(@";
                 ");
                 code.Append(resetMethodName);
+                code.Append(@";
+");
+                
+                code.Append(getMethodName);
                 code.Append(@";
 ");
                 
