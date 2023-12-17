@@ -215,7 +215,7 @@ namespace {settings.classNameSpace}
                 var changeMethodCall = settings.GenerateChangeMethodCall(property);
                 code.Append(@$"
                     case {enumName}.{property}:
-                        {changeMethodCall};
+                        {changeMethodCall}
                         break;"
                 );
             }
@@ -241,7 +241,7 @@ namespace {settings.classNameSpace}
                 var resetMethodCall = settings.GenerateResetMethodCall(property);
                 code.Append(@$"
                     case {enumName}.{property}:
-                        {resetMethodCall};
+                        {resetMethodCall}
                         break;"
                 );
             }
@@ -266,12 +266,15 @@ namespace {settings.classNameSpace}
                 var getMethodCall = settings.GenerateGetMethodCall(property);
                 code.Append(@$"
                     case {enumName}.{property}:
-                        return {getMethodCall};
+                        return {getMethodCall}
                         break;"
                 );
             }
             
             code.Append(@"
+                    default :
+                        value = 0;
+                        return false;
                 }
             }");
             
@@ -294,7 +297,7 @@ namespace {settings.classNameSpace}
                     var changeMethodCall = settings.GenerateChangeAsyncMethodCall(property);
                     code.Append(@$"
                     case {enumName}.{property}:
-                        await {changeMethodCall};
+                        await {changeMethodCall}
                         break;"
                     );
                 }

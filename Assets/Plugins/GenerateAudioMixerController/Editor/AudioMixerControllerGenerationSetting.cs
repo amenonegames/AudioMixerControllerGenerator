@@ -67,10 +67,8 @@ using {interfaceNameSpace};";
 ";
         }
         
-        // return exposed param to default method Name to use method generation and interface generation
         public string GenerateGetMethodName(string propertyName) => @$"bool Get{propertyName}(out float value)";
         public string GenerateGetMethodCall(string propertyName) => @$"Get{propertyName}(out value);";
-        // return exposed param to default method sync ver
         public string GenerateGetMethod(string propertyName)
         {
             var resetMethodName = "public " + GenerateGetMethodName(propertyName);
