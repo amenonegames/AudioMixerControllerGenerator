@@ -15,4 +15,4 @@ AudioMixerは非常に便利な機能ですが、
 
 利用方法など詳細は以下記事をご参照ください！
 
-https://qiita.com/drafts/8fcd2e2703c26bb8b4b8/edit
+https://qiita.com/amenone_games/items/8fcd2e2703c26bb8b4b8
